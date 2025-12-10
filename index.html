@@ -41,12 +41,25 @@
                     
                     // Simple Markdown Parser
                     const lines = text.split('\n');
+                    
                     lines.forEach(line => {
-                        // Regex to match: - [Text](URL) - greedy match for Text to allow nested brackets like images
-                        const match = line.match(/^\s*-\s*\[((?:.|[\r\n])*?)\]\((.*?)\)\s*$/);
+                        const trimmedLine = line.trim();
+                        // Check for Header: # Title or ## Subtitle
+                        const headerMatch = trimmedLine.match(/^(#{1,6})\s+(.*)/);
+                        // Check for Link: - [Text](URL)
+                        const linkMatch = trimmedLine.match(/^\s*-\s*\[((?:.|[\r\n])*?)\]\((.*?)\)\s*$/);
                         
-                        if (match) {
-                            const [_, rawText, url] = match;
+                        if (headerMatch) {
+                            const [_, hashes, content] = headerMatch;
+                            // Skip main title (# My Links) usually
+                            if (hashes.length > 1) {
+                                const h2 = document.createElement('div');
+                                h2.className = 'category-title';
+                                h2.textContent = content;
+                                container.appendChild(h2);
+                            }
+                        } else if (linkMatch) {
+                            const [_, rawText, url] = linkMatch;
                             
                             // Create Link Card
                             const a = document.createElement('a');
