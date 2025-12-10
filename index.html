@@ -116,6 +116,28 @@
                         </div>
                     `;
                 });
+
+            // Secret Access: Click profile pic 5 times
+            const profilePic = document.querySelector('.profile-pic');
+            let clickCount = 0;
+            let clickTimer;
+
+            if (profilePic) {
+                profilePic.style.cursor = 'pointer';
+                profilePic.addEventListener('click', () => {
+                    clickCount++;
+                    
+                    // Reset count if too slow (2 seconds)
+                    clearTimeout(clickTimer);
+                    clickTimer = setTimeout(() => {
+                        clickCount = 0;
+                    }, 2000);
+
+                    if (clickCount === 5) {
+                        window.location.href = 'secrets.html';
+                    }
+                });
+            }
         });
     </script>
 </body>
