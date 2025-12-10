@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Links</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <img src="https://ui-avatars.com/api/?name=User&background=0D8ABC&color=fff&rounded=true" alt="Profile" class="profile-pic">
+            <h1>All My Links</h1>
+            <p>Welcome to my personal link hub.</p>
+        </header>
+        
+        <main class="links-container" id="links-list">
+            <!-- Links will be loaded here from links.md -->
+            <div style="text-align: center; color: #666;">Loading links...</div>
+        </main>
+
+        <footer>
+            <p>&copy; 2025 Simple Links</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('links-list');
+
+            fetch('links.md')
+                .then(response => {
+                    if (!response.ok) throw new Error('Failed to load links.md');
+                    return response.text();
+                })
+                .then(text => {
+                    container.innerHTML = ''; // Clear loading message
+                    
+                    // Simple Markdown Parser
+                    const lines = text.split('\n');
+                    lines.forEach(line => {
+                        // Regex to match: - [Text](URL) - greedy match for Text to allow nested brackets like images
+                        const match = line.match(/^\s*-\s*\[((?:.|[\r\n])*?)\]\((.*?)\)\s*$/);
+                        
+                        if (match) {
+                            const [_, rawText, url] = match;
+                            
+                            // Create Link Card
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.target = '_blank';
+                            a.className = 'link-card';
+                            
+                            let iconHtml = '';
+                            let label = rawText;
+                            
+                            // Check for Markdown Image: ![alt](src)
+                            const imgMatch = rawText.match(/^!\[(.*?)\]\((.*?)\)/);
+                            
+                            // Check for HTML Image: <img src="...">
+                            const htmlImgMatch = rawText.match(/^<img\s+[^>]*src=["'](.*?)["'][^>]*>/);
+
+                            if (imgMatch) {
+                                const [fullMatch, alt, src] = imgMatch;
+                                iconHtml = `<img src="${src}" alt="${alt}">`;
+                                label = rawText.replace(fullMatch, '').trim();
+                            } else if (htmlImgMatch) {
+                                const [fullMatch, src] = htmlImgMatch;
+                                iconHtml = `<img src="${src}" alt="icon">`;
+                                label = rawText.replace(fullMatch, '').trim();
+                            } else {
+                                // Default/Emoji Logic
+                                const firstSpaceIndex = rawText.indexOf(' ');
+                                if (firstSpaceIndex > -1 && firstSpaceIndex <= 4) {
+                                    iconHtml = rawText.substring(0, firstSpaceIndex);
+                                    label = rawText.substring(firstSpaceIndex + 1);
+                                } else {
+                                    iconHtml = '🔗';
+                                }
+                            }
+
+                            a.innerHTML = `
+                                <span class="link-icon">${iconHtml}</span>
+                                <span class="link-text">${label}</span>
+                            `;
+                            
+                            container.appendChild(a);
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    container.innerHTML = `
+                        <div style="text-align: center; color: red;">
+                            <p>⚠️ Could not load links.</p>
+                            <p style="font-size: 0.8rem; margin-top: 5px;">
+                                If you are opening this file directly, browsers block reading files (CORS).<br>
+                                Please use a local server (e.g. VS Code Live Server).
+                            </p>
+                        </div>
+                    `;
+                });
+        });
+    </script>
+</body>
+</html>
